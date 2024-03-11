@@ -1,5 +1,7 @@
 package pl.malcew.testbitly.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -13,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("api/v1/paste")
 @Log4j2
+@Tag(name = "Pastebox", description = "The pastebox API")
 public class MainController {
     private final PasteboxService pasteboxService;
 
@@ -20,7 +23,11 @@ public class MainController {
         this.pasteboxService = pasteboxService;
 
     }
+@Operation(summary = "Get the last ten pasteboxes",
+        description = "Get the last ten pasteboxes",
+        tags = {"Pastebox","get-ten"}
 
+)
     @GetMapping("/get-ten")
     public List<PasteboxRecord> getLastTenPasteboxes() {
         var lastTen = pasteboxService.getLastTenPasteboxes();

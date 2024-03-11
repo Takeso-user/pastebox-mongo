@@ -1,0 +1,26 @@
+spring:
+  data:
+    mongodb:
+      authentication-database: admin
+      username: admin
+      password: password
+      database: pastebox
+      port: 27017
+      host: localhost
+
+pastebox:
+  openapi:
+    dev-url: http://localhost:8080
+    prod-url: https://pastebox.herokuapp.com
+
+springdoc:
+  swagger-ui:
+    path: /pastebox-docs
+    try-it-out-enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    filter: true
+  api-docs:
+    path: /pastebox-api-docs
+
+  packages-to-scan: pl.malcew.testbitly.controller

@@ -3,6 +3,7 @@ package pl.malcew.testbitly.entity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -10,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @Builder
 @ToString
+@Log4j2
 public class PasteboxEntity {
 
     @Id
@@ -20,6 +22,7 @@ public class PasteboxEntity {
     private String content;
 
     public PasteboxRecord toRecord() {
+        log.info("converting to record: " + this);
         return new PasteboxRecord(id, expirationTime, scope, content);
     }
 }

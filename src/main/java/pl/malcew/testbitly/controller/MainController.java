@@ -1,5 +1,6 @@
 package pl.malcew.testbitly.controller;
 
+import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import pl.malcew.testbitly.entity.PasteboxEntity;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/paste")
+@Log4j2
 public class MainController {
     private final PasteboxService pasteboxService;
 
@@ -21,13 +23,14 @@ public class MainController {
 
     @GetMapping("/get-ten")
     public List<PasteboxRecord> getLastTenPasteboxes() {
-        System.out.println("last ten in controller: ");
-        return pasteboxService.getLastTenPasteboxes();
+        var lastTen = pasteboxService.getLastTenPasteboxes();
+        log.info("last ten in controller: " + lastTen);
+        return lastTen;
     }
 
     @GetMapping("/get/{uuid}")
     public String getById(@PathVariable String uuid) {
-        System.out.println("uuid of the record is: " + uuid);
+        log.info("uuid of the record is: " + uuid);
         return pasteboxService.getById(uuid);
     }
 
@@ -38,12 +41,13 @@ public class MainController {
             pasteboxEntity.setExpirationTime("unlimited");
         }
         if (!pasteboxService.getExpirationTimeMap().containsKey(pasteboxEntity.getExpirationTime())) {
+            log.error("Wrong time format!");
             throw new WrongTimeFormatException("""
                     Wrong time format.\s
                     The expiration time should be as one of the following:\s
                     10m, 1h, 3h, 1d, 1w, 1m, unlimited""");
         }
-        System.out.println("!controller pasteboxEntity: " + pasteboxEntity);
+        log.info("Controller pasteboxEntity: " + pasteboxEntity);
         String uuid = pasteboxService.savePastebox(pasteboxEntity);
         return ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/api/v1/paste/get/{uuid}")
@@ -52,7 +56,8 @@ public class MainController {
     }
 
     @DeleteMapping("/delete/{uuid}")
-    public void deleteById(@PathVariable String uuid){
-        pasteboxService.deleteById(uuid);
+    public String deleteById(@PathVariable String uuid) {
+        log.info("trying to delete the record with uuid: " + uuid);
+        return pasteboxService.deleteById(uuid);
     }
 }

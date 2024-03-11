@@ -1,17 +1,16 @@
 package pl.malcew.testbitly.service;
 
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import pl.malcew.testbitly.entity.PasteboxEntity;
 import pl.malcew.testbitly.entity.PasteboxRecord;
 import pl.malcew.testbitly.entity.PostboxScope;
 import pl.malcew.testbitly.repo.PasteboxRepo;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Service
+@Log4j2
 public class PasteboxService {
 
     private final PasteboxRepo pasteboxRepo;
@@ -34,60 +33,45 @@ public class PasteboxService {
     }
 
     public List<PasteboxRecord> getLastTenPasteboxes() {
-        List<PasteboxEntity> lastTen = pasteboxRepo.findAll();
-        lastTen.forEach(System.out::println);
-        lastTen = lastTen
-                .stream()
-                .filter(p ->
-                        expirationTime.get(p.getExpirationTime()) + p.getCreationTime() > System.currentTimeMillis()
-                                || p.getExpirationTime().equals("unlimited")
-                )
-                .peek(p ->
-                        {
-                            System.out.println("expirationTime: " + expirationTime);
-                            System.out.println("expirationTime.get(p.getExpirationTime()): " + expirationTime.get(p.getExpirationTime()));
-                            System.out.println("p.: " + p);
-                            System.out.println("p.getExpirationTime(): " + p.getExpirationTime());
-                            System.out.println("creation time: " + p.getCreationTime());
-                            System.out.println("current time: " + System.currentTimeMillis());
-                        }
-                )
+        log.info("Getting the last ten pasteboxes");
+        return pasteboxRepo.findAll().stream()
+                .filter(p -> (expirationTime.get(p.getExpirationTime()) + p.getCreationTime() > System.currentTimeMillis()
+                        || p.getExpirationTime().equals("unlimited"))
+                        && p.getScope().equals(PostboxScope.PUBLIC))
+                .sorted(Comparator.comparing(PasteboxEntity::getCreationTime).reversed())
+                .limit(10)
+                .map(PasteboxEntity::toRecord)
                 .toList();
-
-
-        if (lastTen.isEmpty()) return List.of();
-        lastTen = lastTen
-                .stream()
-                .filter(publicPost -> publicPost.getScope().equals(PostboxScope.PUBLIC))
-
-                .toList();
-        if (lastTen.size() > 10) {
-            var res=  lastTen.subList(lastTen.size() - 10, lastTen.size());
-            return res.stream().map(PasteboxEntity::toRecord).toList();
-        }
-        return lastTen.stream().map(PasteboxEntity::toRecord).toList();
     }
 
     public String savePastebox(PasteboxEntity pasteboxEntity) {
+        log.info("Saving a new pastebox: {}", pasteboxEntity);
         PasteboxEntity res;
         try {
             pasteboxEntity.setId(UUID.randomUUID().toString());
             pasteboxEntity.setCreationTime(System.currentTimeMillis());
-            System.out.println("!service pasteboxEntity: " + pasteboxEntity);
             res =  pasteboxRepo.save(pasteboxEntity);
         } catch (Exception e) {
-            System.out.println("!service pasteboxEntity: " + pasteboxEntity + " !!!\n" + e);
+            log.error("Failed to save pastebox: {}", pasteboxEntity, e);
             throw new RuntimeException(e);
         }
+        log.info("Successfully saved pastebox with id: {}", res.getId());
         return res.getId();
     }
 
 
-    public String getById(String id) {
-        return Objects.requireNonNull(pasteboxRepo.findById(id).orElse(null)).getContent();
+    public String getById(String uuid) {
+        log.info("Getting the paste with id: {}", uuid);
+        return Objects
+                .requireNonNull(pasteboxRepo
+                        .findById(uuid)
+                        .orElse(null))
+                .getContent();
     }
 
-    public void deleteById(String uuid) {
+    public String deleteById(String uuid) {
+        log.info("Deleting the paste with id: {}", uuid);
         pasteboxRepo.deleteById(uuid);
+        return String.format("the paste with id %s has been successfully deleted", uuid);
     }
 }

@@ -1,6 +1,7 @@
 package pl.malcew.testbitly.controller;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import pl.malcew.testbitly.entity.PasteboxEntity;
 import pl.malcew.testbitly.entity.PasteboxRecord;
 import pl.malcew.testbitly.exception.WrongTimeFormatException;
@@ -15,6 +16,7 @@ public class MainController {
 
     public MainController(PasteboxService pasteboxService) {
         this.pasteboxService = pasteboxService;
+
     }
 
     @GetMapping("/get-ten")
@@ -24,12 +26,13 @@ public class MainController {
     }
 
     @GetMapping("/get/{uuid}")
-    public PasteboxEntity getById(String uuid) {
+    public String getById(@PathVariable String uuid) {
+        System.out.println("uuid of the record is: " + uuid);
         return pasteboxService.getById(uuid);
     }
 
     @PostMapping("/create")
-    public void createNewPastebox(@RequestBody PasteboxEntity pasteboxEntity) {
+    public String createNewPastebox(@RequestBody PasteboxEntity pasteboxEntity) {
 
         if (pasteboxEntity.getExpirationTime() == null) {
             pasteboxEntity.setExpirationTime("unlimited");
@@ -41,7 +44,11 @@ public class MainController {
                     10m, 1h, 3h, 1d, 1w, 1m, unlimited""");
         }
         System.out.println("!controller pasteboxEntity: " + pasteboxEntity);
-        pasteboxService.savePastebox(pasteboxEntity);
+        String uuid = pasteboxService.savePastebox(pasteboxEntity);
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/paste/get/{uuid}")
+                .buildAndExpand(uuid)
+                .toUriString();
     }
 
     @DeleteMapping("/delete/{uuid}")

@@ -8,6 +8,7 @@ import pl.malcew.testbitly.repo.PasteboxRepo;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -67,21 +68,23 @@ public class PasteboxService {
         return lastTen.stream().map(PasteboxEntity::toRecord).toList();
     }
 
-    public void savePastebox(PasteboxEntity pasteboxEntity) {
+    public String savePastebox(PasteboxEntity pasteboxEntity) {
+        PasteboxEntity res;
         try {
             pasteboxEntity.setId(UUID.randomUUID().toString());
             pasteboxEntity.setCreationTime(System.currentTimeMillis());
             System.out.println("!service pasteboxEntity: " + pasteboxEntity);
-            pasteboxRepo.save(pasteboxEntity);
+            res =  pasteboxRepo.save(pasteboxEntity);
         } catch (Exception e) {
             System.out.println("!service pasteboxEntity: " + pasteboxEntity + " !!!\n" + e);
             throw new RuntimeException(e);
         }
+        return res.getId();
     }
 
 
-    public PasteboxEntity getById(String id) {
-        return pasteboxRepo.findById(id).orElse(null);
+    public String getById(String id) {
+        return Objects.requireNonNull(pasteboxRepo.findById(id).orElse(null)).getContent();
     }
 
     public void deleteById(String uuid) {
